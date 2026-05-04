@@ -1,14 +1,8 @@
 {
-  "devDependencies": {
-    "autoprefixer": "^10.5.0",
-    "postcss": "^8.5.12",
-    "tailwindcss": "^4.2.4"
-  }
-}
-  "type": "module",
-  "private": true,
   "name": "skillsphere-ai-root",
   "version": "1.0.0",
+  "private": true,
+  "type": "module",
   "scripts": {
     "install-all": "cd client && npm install && cd ../server && npm install && cd ../ai-ml && npm install",
     "client": "cd client && npm run dev",
@@ -20,6 +14,9 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "concurrently": "^8.0.0"
+    "autoprefixer": "^10.5.0",
+    "concurrently": "^8.0.0",
+    "postcss": "^8.5.12",
+    "tailwindcss": "^4.2.4"
   }
 }

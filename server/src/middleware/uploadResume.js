@@ -25,8 +25,9 @@ const allowedMimeTypes = [
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "text/plain"
 ];
-const allowedExtensions = [".pdf", ".doc", ".docx"];
+const allowedExtensions = [".pdf", ".doc", ".docx", ".txt"];
 
 const fileFilter = (req, file, cb) => {
   const extension = path.extname(file.originalname).toLowerCase();
@@ -36,7 +37,7 @@ const fileFilter = (req, file, cb) => {
   if (hasAllowedMimeType && hasAllowedExtension) {
     cb(null, true);
   } else {
-    const typeError = new Error("Only PDF, DOC, and DOCX files are allowed");
+    const typeError = new Error("Only PDF, DOCX, and TXT files are allowed");
     typeError.code = "INVALID_FILE_TYPE";
     cb(typeError, false);
   }

@@ -8,7 +8,7 @@ import Input from "../../../shared/components/Input";
 import LoadingState from "../../../shared/components/LoadingState";
 import ErrorState from "../../../shared/components/ErrorState";
 import EmptyState from "../../../shared/components/EmptyState";
-import JobPostingCard from "../components/JobPostingCard";
+import { JobViewerCard } from "../../../shared/components";
 import { getRecruiterJobs } from "../services/jobPostingService";
 
 const RecruiterJobsPage = () => {
@@ -134,9 +134,10 @@ const RecruiterJobsPage = () => {
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {filteredJobs.map((job) => (
-              <JobPostingCard
+              <JobViewerCard
                 key={job._id || job.id}
                 job={job}
+                viewerRole="recruiter"
                 onEdit={handleEditJob}
                 onViewStats={handleViewRecommendations}
               />

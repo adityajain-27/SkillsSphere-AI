@@ -2,10 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const variantClasses = {
-  primary: 'bg-primary text-white shadow-[0_4px_14px_0_rgba(79,70,229,0.39)] hover:bg-primary-hover hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-translate-y-0.5',
-  secondary: 'bg-white/10 text-[#F3F4F6] backdrop-blur-sm border border-[#1F2937] hover:bg-white/15 hover:-translate-y-0.5',
+  primary: 'bg-[var(--primary)] text-white shadow-[0_4px_14px_0_rgba(79,70,229,0.30)] hover:bg-[var(--primary-hover)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.22)] hover:-translate-y-0.5',
+  secondary: 'bg-[var(--surface)] text-[var(--text-main)] backdrop-blur-sm border border-[var(--border)] shadow-[var(--shadow-soft)] hover:bg-[var(--surface-hover)] hover:-translate-y-0.5',
   outline: 'bg-transparent text-primary border-2 border-primary hover:bg-primary/10',
-  ghost: 'bg-transparent text-[#F3F4F6] hover:bg-[#1A243A]',
+  ghost: 'bg-transparent text-[var(--text-main)] hover:bg-[var(--surface-hover)]',
 };
 
 const sizeClasses = {

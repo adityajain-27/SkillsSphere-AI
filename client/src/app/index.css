@@ -9,15 +9,17 @@
   --primary: #4F46E5;
   --primary-hover: #4338CA;
   --secondary: #10B981;
-
-  /* ❌ White hata diya, dark theme rakha */
-  --background: #020617;   /* deep dark blue */
-  --surface: #0f172a;
-  --surface-hover: #1e293b;
-
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border: #1e293b;
+  --accent: #F59E0B;
+  --background: #F7F9FC;
+  --surface: #FFFFFF;
+  --surface-soft: #EEF2FF;
+  --surface-hover: #E7ECF8;
+  --text-main: #111827;
+  --text-muted: #5B6472;
+  --border: #DDE4F0;
+  --nav-bg: rgba(255, 255, 255, 0.82);
+  --shadow-soft: 0 18px 50px -28px rgba(15, 23, 42, 0.38);
+  --hero-grid: rgba(79, 70, 229, 0.11);
 
   --font-heading: 'Outfit', 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
@@ -30,39 +32,39 @@
   --transition: all 0.3s ease;
 }
 
+:root.dark {
+  --primary: #818CF8;
+  --primary-hover: #6366F1;
+  --secondary: #34D399;
+  --accent: #FBBF24;
+  --background: #0B0F19;
+  --surface: #131B2C;
+  --surface-soft: #1A243A;
+  --surface-hover: #22304A;
+  --text-main: #F3F4F6;
+  --text-muted: #A8B2C3;
+  --border: #253149;
+  --nav-bg: rgba(11, 15, 25, 0.82);
+  --shadow-soft: 0 22px 60px -28px rgba(0, 0, 0, 0.72);
+  --hero-grid: rgba(129, 140, 248, 0.14);
+}
 
-/* 🔥 RESET */
+/* RESET */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-
-/* 🔥 BODY FIX (NO WHITE BG ANYMORE) */
+/* BODY */
 body {
   font-family: var(--font-body);
-  background: radial-gradient(circle at top, #0f172a, #020617);
+  background: var(--background);
   color: var(--text-main);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  /* Prevent zoom on input focus on iOS */
   font-size: 16px;
 }
-
-/* Touch-friendly defaults for mobile */
-@media (max-width: 768px) {
-  body {
-    font-size: 16px; /* Prevents auto-zoom on iOS input focus */
-  }
-
-  /* Improve readability and touch targets on small screens */
-  button, a, input[type="checkbox"], input[type="radio"] {
-    min-height: 44px;
-    min-width: 44px;
-  }
-}
-
 
 /* HEADINGS */
 h1, h2, h3, h4, h5, h6 {
@@ -72,28 +74,11 @@ h1, h2, h3, h4, h5, h6 {
   word-break: break-word;
 }
 
-/* Responsive heading sizes */
-h1 {
-  font-size: clamp(1.5rem, 5vw, 3rem);
-}
-
-h2 {
-  font-size: clamp(1.25rem, 4vw, 2rem);
-}
-
-h3 {
-  font-size: clamp(1.1rem, 3vw, 1.5rem);
-}
-
-
 /* LINKS */
 a {
   color: inherit;
   text-decoration: none;
-  /* Better touch interaction */
-  -webkit-tap-highlight-color: transparent;
 }
-
 
 /* CONTAINER */
 .container {
@@ -102,53 +87,34 @@ a {
   padding: 0 1.5rem;
 }
 
-
-/* TEXT UTILITIES */
+/* TEXT */
 .text-primary {
   color: var(--primary);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #4F46E5, #A855F7);
+  background: linear-gradient(135deg, var(--primary) 0%, #A855F7 52%, var(--secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-
-/* 🔥 CARD STYLE (USEFUL FOR YOUR UI) */
-.card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(10px);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  transition: var(--transition);
+.landing-page {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text-main);
 }
 
-.card:hover {
-  background: rgba(255, 255, 255, 0.08);
+.hero-demo-grid {
+  background-image:
+    linear-gradient(var(--hero-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hero-grid) 1px, transparent 1px);
+  background-size: 26px 26px;
 }
 
-
-/* 🔥 BUTTON STYLE */
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  padding: 0.6rem 1.4rem;
-  border-radius: 0.5rem;
-  transition: var(--transition);
-}
-
-.btn-primary:hover {
-  background: var(--primary-hover);
-}
-
-
-/* 🔥 ANIMATION */
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(25px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -156,10 +122,162 @@ a {
   }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.6s ease forwards;
+@keyframes floatPanel {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
+@keyframes scanLine {
+  0% {
+    transform: translateY(-180%);
+    opacity: 0;
+  }
+  18%, 78% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(340px);
+    opacity: 0;
+  }
+}
+
+@keyframes flowAcross {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(160%);
+  }
+}
+
+@keyframes pulseSoft {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.65;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes waveBar {
+  0%, 100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes growWidth {
+  0%, 100% {
+    transform: scaleX(0.35);
+  }
+  50% {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes uploadBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-9px);
+  }
+}
+
+@keyframes compareNudge {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes otpPop {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  45% {
+    transform: translateY(-4px) scale(1.08);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s ease-out both;
+}
+
+.animate-float-panel {
+  animation: floatPanel 4.6s ease-in-out infinite;
+}
+
+.animate-scan-line {
+  animation: scanLine 3.2s ease-in-out infinite;
+}
+
+.animate-flow-across {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-flow-across::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 42%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  animation: flowAcross 1.9s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulseSoft 2s ease-in-out infinite;
+}
+
+.animate-wave-bar {
+  transform-origin: bottom;
+  animation: waveBar 1s ease-in-out infinite;
+}
+
+.animate-grow-width {
+  transform-origin: left;
+  animation: growWidth 2.4s ease-in-out infinite;
+}
+
+.animate-upload-bounce {
+  animation: uploadBounce 1.8s ease-in-out infinite;
+}
+
+.animate-compare-nudge {
+  animation: compareNudge 2.1s ease-in-out infinite;
+}
+
+.animate-otp-pop {
+  animation: otpPop 1.8s ease-in-out infinite;
+}
+
+/* CARD */
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+/* BUTTON */
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  padding: 0.6rem 1.4rem;
+  border-radius: 0.5rem;
+}
 
 /* FLEX CENTER */
 .flex-center {

@@ -1,0 +1,118 @@
+import React, { useState, useEffect, useCallback } from "react";
+import { useSelector } from "react-redux";
+import { Briefcase, Info } from "lucide-react";
+import Navbar from "../../../shared/landing/Navbar";
+import LoadingState from "../../../shared/components/LoadingState";
+import ErrorState from "../../../shared/components/ErrorState";
+import EmptyState from "../../../shared/components/EmptyState";
+import { JobViewerCard } from "../../../shared/components";
+import JobFilters from "../components/JobFilters";
+import { getJobs } from "../services/jobService";
+
+const JobBoardPage = () => {
+  const { token } = useSelector((state) => state.auth);
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [filters, setFilters] = useState({});
+
+  const fetchJobs = useCallback(async (currentFilters) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await getJobs(currentFilters, token);
+      setJobs(response.jobs || []);
+    } catch (err) {
+      setError(err.message || "Failed to fetch jobs. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchJobs(filters);
+  }, [fetchJobs, filters]);
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+  };
+
+  return (
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#0f172a,#020617)] text-slate-100 flex flex-col">
+      <Navbar />
+      
+      {/* Spacer to push content below the fixed Navbar */}
+      <div className="h-32 md:h-40 shrink-0"></div>
+      
+      <div className="container mx-auto px-4 pb-12 flex-1">
+        {/* Header Section */}
+        <div className="mb-16 text-center max-w-3xl mx-auto">
+          <h1 className="text-5xl md:text-6xl font-black mb-6 tracking-tight leading-tight">
+            <span className="text-gradient">Opportunities</span> Await
+          </h1>
+          <p className="text-slate-400 text-xl leading-relaxed font-medium">
+            Browse through curated job listings from top companies looking for talent like you.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Filters Sidebar */}
+          <div className="lg:col-span-1">
+            <JobFilters onFilterChange={handleFilterChange} />
+          </div>
+
+          {/* Job List Area */}
+          <div className="lg:col-span-3">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-slate-200 flex items-center gap-2">
+                Available Jobs
+                <span className="text-sm font-normal text-slate-500 bg-slate-800/50 px-2 py-0.5 rounded-full border border-white/5">
+                  {loading ? "..." : jobs.length}
+                </span>
+              </h2>
+            </div>
+
+            {loading ? (
+              <div className="min-h-[400px] flex items-center justify-center bg-slate-900/30 rounded-2xl border border-white/5 backdrop-blur-sm">
+                <LoadingState message="Searching for opportunities..." />
+              </div>
+            ) : error ? (
+              <ErrorState message={error} onRetry={() => fetchJobs(filters)} />
+            ) : jobs.length === 0 ? (
+              <EmptyState
+                icon={<Briefcase size={64} className="text-slate-700 mb-4" />}
+                title="No Jobs Found"
+                description={
+                  Object.values(filters).some(v => v)
+                    ? "Try adjusting your filters to see more opportunities."
+                    : "There are currently no open job postings. Check back later!"
+                }
+              />
+            ) : (
+              <div className="grid grid-cols-1 gap-5">
+                {jobs.map((job) => (
+                  <JobViewerCard key={job._id} job={job} viewerRole="student" />
+                ))}
+              </div>
+            )}
+
+            {/* Quick Note */}
+            {!loading && jobs.length > 0 && (
+              <div className="mt-10 p-5 rounded-2xl bg-slate-900/50 border border-white/5 flex gap-4 items-start">
+                <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg shrink-0">
+                  <Info size={20} />
+                </div>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  Showing all active job listings. Jobs are updated daily based on company availability and recruiter postings. 
+                  Ensure your profile is complete to improve your chances of getting noticed!
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+};
+
+export default JobBoardPage;

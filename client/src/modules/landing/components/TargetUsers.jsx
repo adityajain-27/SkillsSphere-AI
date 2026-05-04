@@ -1,57 +1,69 @@
-import { BookOpen, Briefcase, Users } from "lucide-react";
+import { BookOpen, Briefcase, CheckCircle2, Users } from "lucide-react";
 import Card from "../../../shared/landing/Card";
 
 const TargetUsers = () => {
   const users = [
     {
-      icon: <BookOpen className="text-primary" size={40} />,
+      icon: <BookOpen className="text-[var(--primary)]" size={34} />,
       role: "Students",
       description:
-        "Accelerate your learning curve, practice intelligently, and become undeniably job-ready.",
-      hoverBorder: "hover:border-primary",
+        "Build skills, improve resumes, practice interviews, and see exactly where to focus next.",
+      points: ["Learn in live sessions", "Improve ATS score", "Practice interviews"],
     },
     {
-      icon: <Users style={{ color: "#10B981" }} size={40} />,
+      icon: <Users style={{ color: "var(--secondary)" }} size={34} />,
       role: "Tutors",
       description:
-        "Host rich, interactive live classes and provide personalized mentorship to fuel student growth.",
-      hoverBorder: "hover:border-secondary",
+        "Guide learners through interactive classes while tracking growth and readiness signals.",
+      points: ["Host live cohorts", "Review student progress", "Support career prep"],
     },
     {
-      icon: <Briefcase style={{ color: "#F59E0B" }} size={40} />,
+      icon: <Briefcase style={{ color: "var(--accent)" }} size={34} />,
       role: "Recruiters",
       description:
-        "Source top-tier talent quickly using AI-backed skill profiling and detailed analytics.",
-      hoverBorder: "hover:border-[#F59E0B]",
+        "Discover candidates with clearer skill evidence, resume fit, and role-aligned readiness.",
+      points: ["Post role requirements", "Match candidate profiles", "Shortlist with context"],
     },
   ];
 
   return (
-    <section className="py-32 px-4 relative sm:py-16 max-sm:py-8">
+    <section className="py-28 px-4 relative sm:py-16 max-sm:py-8">
       <div className="container">
-        <div className="text-center mb-16 max-w-[700px] mx-auto sm:mb-12 max-sm:mb-6">
+        <div className="mb-14 max-w-[760px] sm:mb-10">
           <h2 className="text-[clamp(1.5rem,4vw,2.5rem)] font-bold mb-4 leading-tight">
             Built For The <span className="text-gradient">Ecosystem</span>
           </h2>
-          <p className="text-[#9CA3AF] text-lg leading-relaxed sm:text-base max-sm:text-[0.95rem]">
-            A cohesive platform supporting every stage of the talent lifecycle.
+          <p className="text-[var(--text-muted)] text-lg leading-relaxed sm:text-base max-sm:text-[0.95rem]">
+            SkillSphere AI connects the people who learn, teach, and hire
+            through one shared readiness layer.
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-10 sm:grid-cols-1 sm:gap-8 max-sm:gap-4">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {users.map((user, index) => (
-            <Card
-              key={index}
-              className={`text-center p-12 sm:p-8 max-sm:p-4 ${user.hoverBorder}`}
-              hoverEffect={true}
-            >
-              <div className="mb-6 flex justify-center max-sm:mb-4">{user.icon}</div>
-              <h3 className="text-2xl font-bold mb-4 leading-snug sm:text-xl max-sm:text-lg max-sm:mb-2">
+            <Card key={user.role} className="p-7" hoverEffect={true}>
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-soft)]">
+                {user.icon}
+              </div>
+                <span className="text-xs font-bold text-[var(--text-muted)]">
+                  0{index + 1}
+                </span>
+              </div>
+              <h3 className="mb-3 text-2xl font-bold leading-snug sm:text-xl">
                 {user.role}
               </h3>
-              <p className="text-[#9CA3AF] text-base leading-relaxed max-sm:text-[0.9rem]">
+              <p className="mb-6 text-base leading-relaxed text-[var(--text-muted)] max-sm:text-[0.9rem]">
                 {user.description}
               </p>
+              <ul className="space-y-3">
+                {user.points.map((point) => (
+                  <li key={point} className="flex items-start gap-2 text-sm font-semibold text-[var(--text-muted)]">
+                    <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-[var(--secondary)]" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
             </Card>
           ))}
         </div>

@@ -9,7 +9,7 @@ import {
   normalizePipelineResult,
 } from "../../utils/normalizeResumeResponse.js";
 import * as resumeService from "./service.js";
-
+import AnalysisHistory from "../../database/models/AnalysisHistory.js";
 
 const defaultDependencies = {
   parseResume,
@@ -92,6 +92,16 @@ export const analyzeResume = async (req, res) => {
         size: `${(file.size / 1024).toFixed(2)} KB`,
         mimeType: file.mimetype,
       },
+    });
+
+    // Save Analysis History
+    await AnalysisHistory.create({
+      user: req.user._id,
+      score: safePipeline.score || 0,
+      classification: safePipeline.classification?.level || "Beginner",
+      skills: safeData.skills || [],
+      missingSkills: safePipeline.skillMatch?.missingSkills || [],
+      suggestions: safePipeline.gapAnalysis?.suggestions || [],
     });
 
     return res.status(200).json({

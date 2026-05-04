@@ -1,31 +1,45 @@
+import { useSelector } from "react-redux";
+import { ArrowRight } from "lucide-react";
 import Button from "../../../shared/landing/Button";
 
 const CTA = () => {
+  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const isRecruiter = user?.role === "recruiter";
+  const cta = isAuthenticated
+    ? {
+        label: isRecruiter ? "Manage Jobs" : "Open Dashboard",
+        path: isRecruiter ? "/recruiter/jobs" : "/dashboard",
+      }
+    : {
+        label: "Create Free Account",
+        path: "/register",
+      };
+
   return (
     <section className="px-4 py-16 pb-32 sm:py-10 sm:pb-16 max-sm:py-6 max-sm:pb-12">
       <div className="container">
-        <div className="relative bg-[linear-gradient(135deg,rgba(79,70,229,0.1)_0%,rgba(168,85,247,0.05)_100%)]
-          border border-[rgba(79,70,229,0.2)] rounded-3xl py-20 px-8 text-center overflow-hidden
-          sm:py-12 sm:px-6 max-sm:py-8 max-sm:px-4">
-
-          {/* Glow effect */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-            w-[300px] h-[300px] max-sm:w-[200px] max-sm:h-[200px]
-            bg-[radial-gradient(circle,rgba(79,70,229,0.3)_0%,transparent_70%)]
-            blur-[50px] pointer-events-none z-0" />
+        <div
+          className="relative border border-[var(--border)] rounded-lg py-20 px-8 text-center overflow-hidden shadow-[var(--shadow-soft)]
+          sm:py-12 sm:px-6 max-sm:py-8 max-sm:px-4"
+          style={{
+            background:
+              "linear-gradient(135deg, color-mix(in srgb, var(--primary) 14%, transparent) 0%, color-mix(in srgb, var(--secondary) 10%, transparent) 100%)",
+          }}
+        >
 
           <h2 className="relative z-10 text-[clamp(1.5rem,4vw,3rem)] font-bold mb-4 leading-tight">
-            Ready to transform your journey?
+            {isAuthenticated ? "Continue building your career signal." : "Ready to transform your journey?"}
           </h2>
-          <p className="relative z-10 text-[#9CA3AF] text-xl mb-10 max-w-[600px] mx-auto leading-relaxed
+          <p className="relative z-10 text-[var(--text-muted)] text-xl mb-10 max-w-[650px] mx-auto leading-relaxed
             sm:text-base sm:mb-6 max-sm:text-[0.95rem] max-sm:mb-5">
-            Join thousands of students, tutors, and recruiters already active on
-            SkillsSphere-AI.
+            {isAuthenticated
+              ? "Jump back into your dashboard, review progress, analyze a resume, or keep moving toward your next role."
+              : "Join students, tutors, and recruiters using SkillsSphere AI to connect learning outcomes with hiring readiness."}
           </p>
           <div className="relative z-10 flex justify-center">
-            <Button variant="primary" size="lg" to="/register"
+            <Button variant="primary" size="lg" to={cta.path}
               className="max-sm:w-full max-sm:max-w-[300px]">
-              Create Free Account
+              {cta.label} <ArrowRight size={20} />
             </Button>
           </div>
         </div>

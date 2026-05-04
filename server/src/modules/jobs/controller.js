@@ -1,4 +1,5 @@
 import JobPosting from "../../database/models/JobPosting.js";
+import { getAllJobs, getJobRecommendations } from "./service.js";
 import AppError from "../../utils/AppError.js";
 import asyncHandler from "../../utils/asyncHandler.js";
 
@@ -11,10 +12,15 @@ export const createJobPosting = asyncHandler(async (req, res) => {
   const {
     title,
     description,
+    requirements,
+    responsibilities,
     skills,
+    experienceRequired,
+    jobLevel,
     status,
     location,
     salary,
+    keywords,
   } = req.body;
 
   // Validate required fields with detailed errors
@@ -29,7 +35,6 @@ export const createJobPosting = asyncHandler(async (req, res) => {
   } else {
     if (!location.city) validationErrors["location.city"] = "City is required";
     if (!location.state) validationErrors["location.state"] = "State is required";
-    // Country is optional here as it has a default value in the Mongoose model
   }
   if (!salary) {
     validationErrors.salary = "Salary information is required";
@@ -55,10 +60,15 @@ export const createJobPosting = asyncHandler(async (req, res) => {
   const jobPosting = await JobPosting.create({
     title,
     description,
+    requirements,
+    responsibilities,
     skills,
+    experienceRequired,
+    jobLevel,
     status: status || "draft",
     location,
     salary,
+    keywords,
     recruiter: req.user._id,
   });
 
@@ -102,4 +112,36 @@ export const getJobPostingById = asyncHandler(async (req, res) => {
     success: true,
     job,
   });
+});
+
+/**
+ * @desc    Get all open job postings with optional filters
+ * @route   GET /api/jobs
+ * @access  Private (All authenticated users)
+ */
+export const getJobs = asyncHandler(async (req, res) => {
+  const { minSalary, maxSalary, designation, postedWithin } = req.query;
+
+  const jobs = await getAllJobs({
+    minSalary,
+    maxSalary,
+    designation,
+    postedWithin,
+  });
+
+  res.status(200).json({
+    success: true,
+    count: jobs.length,
+    jobs,
+  });
+});
+
+/**
+ * @desc    Get personalized job recommendations for students
+ * @route   GET /api/jobs/recommendations
+ * @access  Private (Students only)
+ */
+export const getRecommendations = asyncHandler(async (req, res) => {
+  const recommendations = await getJobRecommendations(req.user);
+  res.status(200).json(recommendations);
 });

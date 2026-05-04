@@ -1,20 +1,20 @@
 import { normalizeSkillArray } from "../utils/skillNormalizer.js";
 
 export const skillEvaluator = ({ resumeSkills = [], jobSkills = [] }) => {
-  if (jobSkills.length === 0) {
+  // Use the optimized normalizer
+  const normResume = normalizeSkillArray(resumeSkills);
+  const normJob = normalizeSkillArray(jobSkills);
+
+  if (jobSkills.length === 0 || normJob.length === 0) {
     return {
       score: 0,
       weight: 1.0,
       feedback: ["No job skills provided for comparison"],
       matchedSkills: [],
       missingSkills: [],
-      extraSkills: resumeSkills,
+      extraSkills: normResume,
     };
   }
-
-  // Use the optimized normalizer
-  const normResume = normalizeSkillArray(resumeSkills);
-  const normJob = normalizeSkillArray(jobSkills);
 
   // Matched: intersection
   const matched = normJob.filter(s => normResume.includes(s));

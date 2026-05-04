@@ -145,7 +145,8 @@ SkillSphere-AI/
 
 - `GET /uploads/:filename`
 - `POST /api/jobs`: create a new job (Recruiter only)
-- `GET /api/jobs`: list all published jobs
+- `GET /api/jobs`: list all published jobs (supports `designation`, `minSalary`, `maxSalary`, `postedWithin` filters)
+- `GET /api/jobs/recruiter`: list jobs posted by the authenticated recruiter
 - `GET /api/jobs/:id`: get job details
 
 ### Why this structure works
@@ -226,6 +227,16 @@ Implemented:
 - Publicly accessible Job Listing and Detail APIs
 - Ownership-based Job Update and Delete APIs
 - Populated recruiter information in job responses
+
+### Job Search & Filtering Progress
+
+Implemented:
+
+- **Dynamic Mongoose Query Builder**: Supports filtering by `minSalary`, `maxSalary`, `designation` (regex title search), and `postedWithin` (date range).
+- **Recency Filters**: Added logic for `1d`, `7d`, and `30d` timeframe filtering.
+- **Database Performance**: Implemented indexes for `title`, `salary`, `status`, and `createdAt` for optimized search.
+- **Refactored Routes**: Unified job discovery under `/api/jobs` while preserving recruiter management security.
+- **Terminal Test Suite**: Created `server/test-filters.js` for direct validation of filtering logic.
 ```
 
 ## For Open-Source Contributors

@@ -130,5 +130,10 @@ jobPostingSchema.path("salary.max").validate(function (value) {
   return value >= this.salary.min;
 }, "Maximum salary must be greater than or equal to minimum salary");
 
+// Indexes for efficient filtering
+jobPostingSchema.index({ title: "text" });
+jobPostingSchema.index({ "salary.min": 1, "salary.max": 1 });
+jobPostingSchema.index({ status: 1, createdAt: -1 });
+
 const JobPosting = mongoose.model("JobPosting", jobPostingSchema);
 export default JobPosting;

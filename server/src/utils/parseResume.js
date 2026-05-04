@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { PDFParse } from "pdf-parse";
+import mammoth from "mammoth";
 
 const skillKeywords = [
   "JavaScript",
@@ -104,19 +105,26 @@ const extractSkills = (text) => {
 
 export const parseResume = async (filePath) => {
   const extension = path.extname(filePath).toLowerCase();
-  if (extension !== ".pdf") {
-    throw new Error("Only PDF parsing is supported on /analyze right now");
-  }
+  let text = "";
 
-  const fileBuffer = await fs.readFile(filePath);
-  const parser = new PDFParse({ data: fileBuffer });
-  let parsed;
-  try {
-    parsed = await parser.getText();
-  } finally {
-    await parser.destroy();
+  if (extension === ".pdf") {
+    const fileBuffer = await fs.readFile(filePath);
+    const parser = new PDFParse({ data: fileBuffer });
+    try {
+      const parsed = await parser.getText();
+      text = normalizeWhitespace(parsed.text || "");
+    } finally {
+      await parser.destroy();
+    }
+  } else if (extension === ".docx") {
+    const result = await mammoth.extractRawText({ path: filePath });
+    text = normalizeWhitespace(result.value || "");
+  } else if (extension === ".txt") {
+    const rawText = await fs.readFile(filePath, "utf-8");
+    text = normalizeWhitespace(rawText || "");
+  } else {
+    throw new Error("Only PDF, DOCX, and TXT parsing is supported on /analyze right now");
   }
-  const text = normalizeWhitespace(parsed.text || "");
 
   if (!text) {
     throw new Error("Unable to extract text from resume");

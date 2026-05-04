@@ -1,30 +1,33 @@
 import { apiRequest } from "../../../services/apiClient";
 
 export const analyzeResume = async (file, jobDescription = "") => {
-  const formData = new FormData();
-  formData.append("resume", file);
-  
-  if (jobDescription) {
-    formData.append("jobDescription", jobDescription);
+  try {
+    if (!file) throw new Error("Please select a resume file first.");
+
+    const formData = new FormData();
+    formData.append("resume", file);
+    
+    if (jobDescription && jobDescription.trim()) {
+      formData.append("jobDescription", jobDescription.trim());
+    }
+
+    // Get token from storage
+    const TOKEN_KEY = "skillssphere.auth.token";
+    const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
+
+    const response = await apiRequest("/api/resume/analyze", {
+      method: "POST",
+      body: formData,
+      token,
+    });
+
+    if (!response || response.success === false) {
+      throw new Error(response?.message || "Failed to analyze resume. Please check the file format.");
+    }
+
+    return response;
+  } catch (error) {
+    console.error("[resumeService] Analysis Error:", error);
+    throw error; // Let the caller (component) handle the UI toast/state
   }
-
-  // Ensure jobSkills is passed so the skillEvaluator isn't starved
-  formData.append("jobSkills", JSON.stringify([
-    "React",
-    "Node.js",
-    "MongoDB",
-    "Express",
-    "Docker",
-    "AWS"
-  ]));
-
-  // Get token from storage using the correct key from authSlice
-  const TOKEN_KEY = "skillssphere.auth.token";
-  const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
-
-  return apiRequest("/api/resume/analyze", {
-    method: "POST",
-    body: formData,
-    token,
-  });
 };

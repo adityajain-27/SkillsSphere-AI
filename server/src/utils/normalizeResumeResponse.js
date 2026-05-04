@@ -42,5 +42,35 @@ export function normalizePipelineResult(result = {}) {
       result.experienceMatch && typeof result.experienceMatch === "object"
         ? result.experienceMatch
         : {},
+    consistencyMatch:
+      result.consistencyMatch && typeof result.consistencyMatch === "object"
+        ? result.consistencyMatch
+        : {},
+    readabilityMatch:
+      result.readabilityMatch && typeof result.readabilityMatch === "object"
+        ? result.readabilityMatch
+        : {},
+    impactMatch:
+      result.impactMatch && typeof result.impactMatch === "object"
+        ? result.impactMatch
+        : {},
+    atsOptimization:
+      result.atsOptimization && typeof result.atsOptimization === "object"
+        ? result.atsOptimization
+        : {},
+    techStandard:
+      result.techStandard && typeof result.techStandard === "object"
+        ? result.techStandard
+        : {},
+    gapAnalysis:
+      result.gapAnalysis && typeof result.gapAnalysis === "object"
+        ? result.gapAnalysis
+        : {},
+    classification:
+      result.classification && typeof result.classification === "object"
+        ? result.classification
+        : null,
+    isJDProvided: !!result.isJDProvided
   };
 }
+

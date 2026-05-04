@@ -1,0 +1,11 @@
+import { apiRequest } from "../../../services/apiClient";
+
+export const getAnalysisHistory = async () => {
+  const TOKEN_KEY = "skillssphere.auth.token";
+  const token = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
+
+  return apiRequest("/api/dashboard/history", {
+    method: "GET",
+    token,
+  });
+};

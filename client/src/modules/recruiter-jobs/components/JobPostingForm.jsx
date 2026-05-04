@@ -17,11 +17,34 @@ const CURRENCY_OPTIONS = [
   { value: "GBP", label: "GBP - British Pound" },
 ];
 
+// Matches schema enum exactly
+const JOB_LEVEL_OPTIONS = [
+  { value: "Internship", label: "Internship" },
+  { value: "Entry Level", label: "Entry Level" },
+  { value: "Associate", label: "Associate" },
+  { value: "Mid-Senior Level", label: "Mid-Senior Level" },
+  { value: "Director", label: "Director" },
+  { value: "Executive", label: "Executive" },
+];
+
+// Matches schema's set() transform: trim + lowercase
+const stringToArray = (str) =>
+  str ? str.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean) : [];
+
+// For pre-populating textareas from existing array data (edit mode)
+const arrayToString = (arr) =>
+  Array.isArray(arr) ? arr.join(", ") : arr || "";
+
 const JobPostingForm = ({ onSubmit, initialData = {}, isLoading = false, fieldErrors = {} }) => {
   const [formData, setFormData] = useState({
     title: initialData.title || "",
     description: initialData.description || "",
-    skills: initialData.skills || "",
+    skills: arrayToString(initialData.skills),
+    requirements: arrayToString(initialData.requirements),
+    responsibilities: arrayToString(initialData.responsibilities),
+    keywords: arrayToString(initialData.keywords),
+    experienceRequired: initialData.experienceRequired ?? 0,
+    jobLevel: initialData.jobLevel || "Entry Level",
     status: initialData.status || "draft",
     location: {
       city: initialData.location?.city || "",
@@ -73,20 +96,32 @@ const JobPostingForm = ({ onSubmit, initialData = {}, isLoading = false, fieldEr
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.title) newErrors.title = "Job title is required";
-    if (!formData.description) newErrors.description = "Description is required";
-    if (!formData.skills) newErrors.skills = "Required skills are required";
+    if (!formData.title.trim()) newErrors.title = "Job title is required";
+    if (!formData.description.trim()) newErrors.description = "Description is required";
+    if (formData.description.trim().length < 20)
+      newErrors.description = "Description must be at least 20 characters";
+    if (!formData.skills.trim()) newErrors.skills = "At least one skill is required";
 
-    // Location validation
-    if (!formData.location.city) newErrors["location.city"] = "City is required";
-    if (!formData.location.state) newErrors["location.state"] = "State is required";
-    if (!formData.location.country) newErrors["location.country"] = "Country is required";
+    // Required per schema
+    if (formData.experienceRequired === "" || formData.experienceRequired === null || Number(formData.experienceRequired) < 0)
+      newErrors.experienceRequired = "Years of experience is required";
+    if (!formData.jobLevel) newErrors.jobLevel = "Job level is required";
 
-    // Salary validation
-    if (!formData.salary.min) newErrors["salary.min"] = "Minimum salary is required";
-    if (!formData.salary.max) newErrors["salary.max"] = "Maximum salary is required";
-    if (formData.salary.min && formData.salary.max && Number(formData.salary.min) > Number(formData.salary.max)) {
-      newErrors["salary.max"] = "Maximum salary must be greater than minimum";
+    // Location
+    if (!formData.location.city.trim()) newErrors["location.city"] = "City is required";
+    if (!formData.location.state.trim()) newErrors["location.state"] = "State is required";
+    if (!formData.location.country.trim()) newErrors["location.country"] = "Country is required";
+
+    // Salary — always required per schema (min/max have no negotiable bypass in the model)
+    if (formData.salary.min === "" || formData.salary.min === null)
+      newErrors["salary.min"] = "Minimum salary is required";
+    if (formData.salary.max === "" || formData.salary.max === null)
+      newErrors["salary.max"] = "Maximum salary is required";
+    if (
+      formData.salary.min !== "" && formData.salary.max !== "" &&
+      Number(formData.salary.min) > Number(formData.salary.max)
+    ) {
+      newErrors["salary.max"] = "Maximum salary must be greater than or equal to minimum";
     }
 
     setErrors(newErrors);
@@ -95,13 +130,37 @@ const JobPostingForm = ({ onSubmit, initialData = {}, isLoading = false, fieldEr
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (validate()) {
-      onSubmit(formData);
-    }
+    if (!validate())  return; 
+      // Explicit field mapping — only sends fields defined in the JobPosting schema
+    const payload = {
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      skills: stringToArray(formData.skills),
+      requirements: stringToArray(formData.requirements),
+      responsibilities: stringToArray(formData.responsibilities),
+      keywords: stringToArray(formData.keywords),
+      experienceRequired: Number(formData.experienceRequired),
+      jobLevel: formData.jobLevel,
+      status: formData.status,
+      location: {
+        city: formData.location.city.trim(),
+        state: formData.location.state.trim(),
+        country: formData.location.country.trim(),
+        remote: formData.location.remote,
+      },
+      salary: {
+        min: Number(formData.salary.min),
+        max: Number(formData.salary.max),
+        currency: formData.salary.currency,
+        isNegotiable: formData.salary.isNegotiable,
+      },
+    };
+
+    onSubmit(payload);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
           id="title"
@@ -119,6 +178,29 @@ const JobPostingForm = ({ onSubmit, initialData = {}, isLoading = false, fieldEr
           value={formData.status}
           onChange={handleChange}
           error={allErrors.status}
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Select
+          id="jobLevel"
+          label="Job Level"
+          options={JOB_LEVEL_OPTIONS}
+          value={formData.jobLevel}
+          onChange={handleChange}
+          error={allErrors.jobLevel}
+          required
+        />
+        <Input
+          id="experienceRequired"
+          label="Years of Experience Required"
+          type="number"
+          min="0"
+          placeholder="e.g. 3"
+          value={formData.experienceRequired}
+          onChange={handleChange}
+          error={allErrors.experienceRequired}
           required
         />
       </div>
@@ -149,16 +231,68 @@ const JobPostingForm = ({ onSubmit, initialData = {}, isLoading = false, fieldEr
         )}
       </div>
 
-      <Input
-        id="skills"
-        label="Required Skills (Comma separated)"
-        placeholder="e.g. React, TypeScript, Node.js, AWS"
-        value={formData.skills}
-        onChange={handleChange}
-        error={allErrors.skills}
-        helperText="These skills will be used to match candidates."
-        required
-      />
+      {/* skills */}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="skills" className="text-sm font-medium text-gray-300">
+          Required Skills <span className="text-red-500">*</span>
+        </label>
+        <textarea
+          id="skills"
+          rows={2}
+          className={`w-full rounded-lg border bg-slate-800 px-3.5 py-2.5 text-sm text-white caret-white placeholder:text-gray-500 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-0 resize-y ${
+            allErrors.skills
+              ? "border-red-400 focus:ring-red-400 focus:border-red-400"
+              : "border-slate-600 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-500"
+          }`}
+          placeholder="e.g. react, typescript, node.js, aws"
+          value={formData.skills}
+          onChange={handleChange}
+        />
+        <p className="text-xs text-slate-500">Comma-separated. Stored in lowercase — used to match candidates.</p>
+        {allErrors.skills && <p className="text-xs text-red-400">{allErrors.skills}</p>}
+      </div>
+
+      {/* requirements */}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="requirements" className="text-sm font-medium text-gray-300">Requirements</label>
+        <textarea
+          id="requirements"
+          rows={3}
+          className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3.5 py-2.5 text-sm text-white caret-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-500 resize-y"
+          placeholder="e.g. 3+ years experience, B.Tech in CS, Strong DSA"
+          value={formData.requirements}
+          onChange={handleChange}
+        />
+        <p className="text-xs text-slate-500">Comma-separated list of candidate qualifications.</p>
+      </div>
+
+      {/* responsibilities */}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="responsibilities" className="text-sm font-medium text-gray-300">Responsibilities</label>
+        <textarea
+          id="responsibilities"
+          rows={3}
+          className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3.5 py-2.5 text-sm text-white caret-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-500 resize-y"
+          placeholder="e.g. Design microservices, Lead code reviews, Mentor juniors"
+          value={formData.responsibilities}
+          onChange={handleChange}
+        />
+        <p className="text-xs text-slate-500">Comma-separated list of key responsibilities.</p>
+      </div>
+
+      {/* keywords */}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="keywords" className="text-sm font-medium text-gray-300">Keywords</label>
+        <textarea
+          id="keywords"
+          rows={2}
+          className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3.5 py-2.5 text-sm text-white caret-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-500 resize-y"
+          placeholder="e.g. remote, fintech, startup, react"
+          value={formData.keywords}
+          onChange={handleChange}
+        />
+        <p className="text-xs text-slate-500">Comma-separated keywords to improve job discoverability.</p>
+      </div>
 
       <div className="border-t border-slate-700 pt-6">
         <h3 className="text-sm font-medium text-gray-300 mb-4">Location</h3>
@@ -258,7 +392,7 @@ const JobPostingForm = ({ onSubmit, initialData = {}, isLoading = false, fieldEr
           loading={isLoading}
           className="px-8 bg-blue-600 hover:bg-blue-500"
         >
-          {initialData.id ? "Update Job Posting" : "Create Job Posting"}
+          {(initialData._id || initialData.id) ? "Update Job Posting" : "Create Job Posting"}
         </Button>
       </div>
     </form>

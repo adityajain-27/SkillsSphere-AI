@@ -41,3 +41,6 @@ venv/
 
 # Test artifacts
 .pytest_cache/
+
+# Local emergency scripts
+server/reset-auth.js

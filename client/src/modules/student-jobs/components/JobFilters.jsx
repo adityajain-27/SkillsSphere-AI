@@ -1,0 +1,145 @@
+import React, { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import { Search, Filter, Calendar, IndianRupee, X } from "lucide-react";
+import Input from "../../../shared/components/Input";
+import Select from "../../../shared/components/Select";
+
+const JobFilters = ({ onFilterChange }) => {
+  const [filters, setFilters] = useState({
+    designation: "",
+    minSalary: "",
+    maxSalary: "",
+    postedWithin: "",
+  });
+
+  const [debouncedDesignation, setDebouncedDesignation] = useState("");
+
+  // Debounce designation search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedDesignation(filters.designation);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [filters.designation]);
+
+  // Trigger filter change when filters update
+  useEffect(() => {
+    onFilterChange({
+      ...filters,
+      designation: debouncedDesignation,
+    });
+  }, [debouncedDesignation, filters.minSalary, filters.maxSalary, filters.postedWithin]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleClear = () => {
+    setFilters({
+      designation: "",
+      minSalary: "",
+      maxSalary: "",
+      postedWithin: "",
+    });
+  };
+
+  const dateOptions = [
+    { value: "", label: "Anytime" },
+    { value: "1d", label: "Last 24 hours" },
+    { value: "7d", label: "Last 7 days" },
+    { value: "30d", label: "Last 30 days" },
+  ];
+
+  return (
+    <div className="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6 h-fit sticky top-28">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <Filter size={20} className="text-blue-400" />
+          Filters
+        </h2>
+        <button
+          onClick={handleClear}
+          className="text-xs font-medium text-slate-400 hover:text-white transition-colors flex items-center gap-1"
+        >
+          <X size={14} />
+          Clear All
+        </button>
+      </div>
+
+      <div className="space-y-6">
+        {/* Designation */}
+        <div>
+          <label htmlFor="filter-designation" className="block text-sm font-medium text-slate-300 mb-2">
+            Designation
+          </label>
+          <Input
+            id="filter-designation"
+            name="designation"
+            value={filters.designation}
+            onChange={handleChange}
+            placeholder="e.g. Software Engineer"
+            leftIcon={<Search size={18} />}
+            className="bg-slate-800/50 border-white/5 focus:border-blue-500/50"
+          />
+        </div>
+
+        {/* Salary Range */}
+        <div>
+          <label htmlFor="filter-min-salary" className="block text-sm font-medium text-slate-300 mb-2">
+            Expected Salary (₹)
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              id="filter-min-salary"
+              type="number"
+              name="minSalary"
+              value={filters.minSalary}
+              onChange={handleChange}
+              placeholder="Min"
+              className="bg-slate-800/50 border-white/5 focus:border-blue-500/50"
+            />
+            <Input
+              id="filter-max-salary"
+              type="number"
+              name="maxSalary"
+              value={filters.maxSalary}
+              onChange={handleChange}
+              placeholder="Max"
+              className="bg-slate-800/50 border-white/5 focus:border-blue-500/50"
+            />
+          </div>
+        </div>
+
+        {/* Date Posted */}
+        <div>
+          <label htmlFor="filter-date-posted" className="block text-sm font-medium text-slate-300 mb-2">
+            Date Posted
+          </label>
+          <Select
+            id="filter-date-posted"
+            name="postedWithin"
+            value={filters.postedWithin}
+            onChange={handleChange}
+            options={dateOptions}
+            placeholder="Anytime"
+            className="bg-slate-800/50 border-white/5 focus:border-blue-500/50"
+          />
+        </div>
+      </div>
+
+      {/* Quick Tips */}
+      <div className="mt-8 p-4 bg-blue-500/5 rounded-xl border border-blue-500/10">
+        <p className="text-xs text-blue-300 leading-relaxed">
+          <span className="font-bold">Pro Tip:</span> Refine your search to find jobs matching your skill set more accurately.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+JobFilters.propTypes = {
+  onFilterChange: PropTypes.func.isRequired,
+};
+
+export default JobFilters;

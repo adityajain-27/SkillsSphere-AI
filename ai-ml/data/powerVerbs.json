@@ -1,0 +1,7 @@
+{
+  "management": ["Led", "Managed", "Spearheaded", "Orchestrated", "Coordinated", "Supervised", "Directed", "Executed"],
+  "technical": ["Architected", "Engineered", "Optimized", "Developed", "Implemented", "Automated", "Integrated", "Deployed"],
+  "creative": ["Designed", "Transformed", "Pioneered", "Conceptualized", "Visualized", "Revitalized", "Crafted", "Illustrated"],
+  "analytical": ["Analyzed", "Evaluated", "Interpreted", "Researched", "Validated", "Forecasted", "Examined", "Investigated"],
+  "impact": ["Increased", "Reduced", "Saved", "Expanded", "Generated", "Accelerated", "Surpassed", "Delivered"]
+}

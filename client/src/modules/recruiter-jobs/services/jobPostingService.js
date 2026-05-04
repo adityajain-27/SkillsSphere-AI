@@ -45,7 +45,7 @@ const handleServiceError = (error) => {
  */
 export const getRecruiterJobs = async (token) => {
   try {
-    const response = await apiRequest("/api/recruiter/jobs", { token });
+    const response = await apiRequest("/api/jobs/recruiter", { token });
     return {
       success: true,
       jobs: response.jobs || response.data || [],
@@ -72,7 +72,7 @@ export const createJobPosting = async (jobData, token) => {
         : jobData.skills.split(",").map((s) => s.trim()).filter(Boolean),
     };
 
-    const response = await apiRequest("/api/recruiter/jobs", {
+    const response = await apiRequest("/api/jobs", {
       method: "POST",
       body: payload,
       token,
@@ -96,7 +96,7 @@ export const createJobPosting = async (jobData, token) => {
  */
 export const getJobPostingById = async (id, token) => {
   try {
-    const response = await apiRequest(`/api/recruiter/jobs/${id}`, { token });
+    const response = await apiRequest(`/api/jobs/${id}`, { token });
     return {
       success: true,
       job: response.job || response.data,

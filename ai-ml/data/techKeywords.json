@@ -1,0 +1,20 @@
+{
+  "frontend": [
+    "react", "vue", "angular", "svelte", "typescript", "javascript", 
+    "html", "css", "tailwind", "bootstrap", "redux", "next.js", 
+    "webpack", "vite", "sass", "less"
+  ],
+  "backend": [
+    "node.js", "express", "django", "flask", "ruby on rails", "laravel", 
+    "spring boot", "golang", "python", "java", "c#", "php", "rest api", 
+    "graphql", "microservices", "sql", "postgresql", "mongodb", "redis"
+  ],
+  "cloud_devops": [
+    "aws", "azure", "gcp", "docker", "kubernetes", "jenkins", "terraform", 
+    "ansible", "ci/cd", "pipelines", "serverless", "lambda", "nginx"
+  ],
+  "tools_languages": [
+    "git", "github", "bitbucket", "jira", "docker", "vscode", "linux", 
+    "bash", "agile", "scrum", "unit testing", "jest", "cypress"
+  ]
+}

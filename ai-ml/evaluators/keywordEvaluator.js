@@ -1,3 +1,5 @@
+import techKeywords from "../data/techKeywords.json" with { type: "json" };
+
 // --- Stop words (non-technical noise) ---
 const STOP_WORDS = new Set([
   "the","and","or","with","for","in","on","at","a","an","to","of","is","are",
@@ -9,44 +11,6 @@ const STOP_WORDS = new Set([
   "develop","application"
 ]);
 
-// --- 1️⃣ Core Tech ---
-const TECH_KEYWORDS = new Set([
-  "react","node","node.js","mongodb","express","javascript","typescript",
-  "docker","aws","api","apis","rest","mysql","git","github","html","css",
-  "tailwind","bootstrap","redux","next","next.js","postgresql","firebase",
-  "graphql","kubernetes","jenkins"
-]);
-
-// --- 2️⃣ Engineering Concepts ---
-const ENGINEERING_KEYWORDS = [
-  "architecture",
-  "system design",
-  "pipeline",
-  "pipelines",
-  "rest",
-  "rest api",
-  "apis",
-  "microservices",
-  "scalable",
-  "backend",
-  "frontend",
-  "fullstack"
-];
-
-// --- 3️⃣ Action / Impact Words ---
-const IMPACT_KEYWORDS = [
-  "implemented",
-  "optimized",
-  "designed",
-  "developed",
-  "built",
-  "improved",
-  "increased",
-  "reduced",
-  "achieved",
-  "enhanced"
-];
-
 // --- Normalize text ---
 function normalizeText(text = "") {
   return text
@@ -56,136 +20,66 @@ function normalizeText(text = "") {
     .trim();
 }
 
-// --- Extract keywords ---
-function extractKeywords(text) {
-  if (!text) return [];
-
-  // Handle multi-word keywords
-  let preProcessedText = text
-    .replace(/rest api/gi, "rest_api")
-    .replace(/system design/gi, "system_design")
-    .replace(/micro services/gi, "microservices");
-
-  const words = normalizeText(preProcessedText).split(" ");
-  const uniqueWords = [...new Set(words)];
-
-  return uniqueWords
-    .map(word => word.replace("rest_api", "rest api").replace("system_design", "system design"))
-    .filter(word => {
-      // HARD filters (extra protection)
-      if (
-        word.length < 3 ||
-        STOP_WORDS.has(word) ||
-        word.includes(".") ||   // files
-        word.includes("_")      // code patterns
-      ) {
-        // Exception for node.js and next.js in TECH_KEYWORDS
-        if (!(TECH_KEYWORDS.has(word) && word.includes("."))) {
-           return false;
-        }
-      }
-
-      // STRICT category-based whitelisting only
-      return (
-        TECH_KEYWORDS.has(word) ||
-        ENGINEERING_KEYWORDS.includes(word) ||
-        IMPACT_KEYWORDS.includes(word)
-      );
-    });
-}
-
-// --- Preserve original casing from JD ---
-function keywordDisplayFromJD(jdText, keywords) {
-  const originalWords = jdText.split(/\s+/);
-
-  return keywords.map(k => {
-    if (k.includes(" ")) {
-      return k.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-    }
-    const match = originalWords.find(
-      w => w.toLowerCase().replace(/[^\w.+#]/g, "") === k
-    );
-    return match || k;
-  });
-}
-
-// --- MAIN EVALUATOR ---
+/**
+ * Enhanced Keyword Evaluator:
+ * 1. Extract keywords from JD (if provided)
+ * 2. Fallback to domain-specific keywords from techKeywords.json
+ */
 export const keywordEvaluator = ({
   resumeText = "",
   jobDescription = "",
-  weight = 0.2
+  weight = 0.2,
 }) => {
-  // Normalize inputs
-  const cleanResume = normalizeText(resumeText);
-  const cleanJD = normalizeText(jobDescription);
+  const lowerResume = normalizeText(resumeText);
+  const lowerJD = normalizeText(jobDescription);
 
-  if (!cleanJD) {
-    return {
-      score: 0,
-      weight,
-      feedback: ["No job description provided for keyword analysis"],
-      matchedKeywords: [],
-      missingKeywords: []
-    };
-  }
+  // Combine JD keywords with our database keywords for broader detection
+  const allDomainKeywords = Object.values(techKeywords).flat();
+  
+  // Extract keywords from JD by checking against our master list
+  const jdKeywordsFound = allDomainKeywords.filter(k => 
+    lowerJD.includes(k.toLowerCase())
+  );
+  
+  // If no JD or no tech keywords found in JD, use a baseline set
+  const keywordsToSearch = jdKeywordsFound.length > 0 
+    ? [...new Set(jdKeywordsFound)] 
+    : ["react", "node.js", "javascript", "python", "aws", "docker", "sql", "api", "git", "typescript"];
 
-  // Extract keywords
-  let jdKeywords = extractKeywords(cleanJD);
+  const matchedKeywords = [];
+  const missingKeywords = [];
 
-  // Deduplicate again (safety)
-  jdKeywords = [...new Set(jdKeywords)];
-
-  if (jdKeywords.length === 0) {
-    return {
-      score: 0,
-      weight,
-      feedback: ["No meaningful keywords found in job description"],
-      matchedKeywords: [],
-      missingKeywords: []
-    };
-  }
-
-  // Match against resume
-  const matched = [];
-  const missing = [];
-
-  jdKeywords.forEach(keyword => {
-    if (cleanResume.includes(keyword)) {
-      matched.push(keyword);
+  keywordsToSearch.forEach((keyword) => {
+    if (lowerResume.includes(keyword.toLowerCase())) {
+      matchedKeywords.push(keyword);
     } else {
-      missing.push(keyword);
+      missingKeywords.push(keyword);
     }
   });
 
-  // --- Score ---
-  let score = (matched.length / jdKeywords.length) * 100;
-  score = Math.min(100, Number(score.toFixed(2)));
+  const total = keywordsToSearch.length;
+  const score = total > 0 ? Math.round((matchedKeywords.length / total) * 100) : 100;
 
-  // --- Feedback ---
   const feedback = [];
-
-  if (score >= 80) {
-    feedback.push("Resume contains most important technical keywords");
-  } else if (score >= 50) {
-    feedback.push("Resume contains some important keywords but can be improved");
+  if (score < 50) {
+    feedback.push("Your resume is missing many key industry keywords found in the job description.");
+  } else if (score < 80) {
+    feedback.push("Good keyword alignment, but adding a few more specific technologies could improve ATS ranking.");
   } else {
-    feedback.push("Resume is missing many important technical keywords");
+    feedback.push("Excellent keyword alignment with the job requirements.");
   }
 
-  // Add limited missing keywords feedback (avoid spam)
-  missing.slice(0, 5).forEach(k => {
-    feedback.push(`Missing keyword: ${k}`);
+  // Suggest up to 5 missing keywords in feedback
+  missingKeywords.slice(0, 5).forEach(k => {
+    feedback.push(`Consider adding: ${k}`);
   });
-
-  // --- Limit output (UX improvement) ---
-  const LIMITED_MATCHED = matched.slice(0, 20);
-  const LIMITED_MISSING = missing.slice(0, 20);
 
   return {
     score,
     weight,
     feedback,
-    matchedKeywords: keywordDisplayFromJD(jobDescription, LIMITED_MATCHED),
-    missingKeywords: keywordDisplayFromJD(jobDescription, LIMITED_MISSING)
+    matchedKeywords: matchedKeywords.slice(0, 15),
+    missingKeywords: missingKeywords.slice(0, 15),
+    name: "keywordMatch"
   };
 };
