@@ -63,7 +63,6 @@ export function extractExperienceInYears(text = "") {
     maxYears = Math.max(maxYears, years + months / 12);
   }
 
-
   // ================================
   // 3. RANGE (3-5 years)
   // ================================

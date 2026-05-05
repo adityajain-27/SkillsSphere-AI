@@ -1,22 +1,22 @@
-import { aggregateResults } from "./aggregator.js";
-import { skillEvaluator } from "../evaluators/skillEvaluator.js";
-import { keywordEvaluator } from "../evaluators/keywordEvaluator.js";
-import { experienceEvaluator } from "../evaluators/experienceEvaluator.js";
-import { classifyResume } from "../utils/resumeClassifier.js";
-import consistencyEvaluator from "../evaluators/consistencyEvaluator.js";
-import gapAnalyzer from "../utils/gapAnalyzer.js";
-import readabilityEvaluator from "../evaluators/readabilityEvaluator.js";
-import { impactEvaluator } from "../evaluators/impactEvaluator.js";
 import { atsOptimizationEvaluator } from "../evaluators/atsOptimizationEvaluator.js";
+import consistencyEvaluator from "../evaluators/consistencyEvaluator.js";
+import { experienceEvaluator } from "../evaluators/experienceEvaluator.js";
+import { impactEvaluator } from "../evaluators/impactEvaluator.js";
+import { keywordEvaluator } from "../evaluators/keywordEvaluator.js";
+import readabilityEvaluator from "../evaluators/readabilityEvaluator.js";
+import { skillEvaluator } from "../evaluators/skillEvaluator.js";
 import { techStandardEvaluator } from "../evaluators/techStandardEvaluator.js";
+import gapAnalyzer from "../utils/gapAnalyzer.js";
+import { classifyResume } from "../utils/resumeClassifier.js";
+import { aggregateResults } from "./aggregator.js";
 
 export async function runPipeline({
   resumeData,
   jobSkills = [],
   jobDescription = "",
 }) {
-    // ADD — safe wrapper for all evaluator calls
-  async function safeEval(name, fn, fallback = { score: 0, error: true  }) {
+  // ADD — safe wrapper for all evaluator calls
+  async function safeEval(name, fn, fallback = { score: 0, error: true }) {
     try {
       return await fn();
     } catch (err) {
@@ -27,20 +27,17 @@ export async function runPipeline({
 
   // ADD — handles both string and object experience entries
   function parseExperience(experience = []) {
-    return experience.map((entry) => {
-      if (typeof entry === "string") return entry;
-      if (typeof entry === "object" && entry !== null) {
-        return [
-          entry.title,
-          entry.company,
-          entry.duration,
-          entry.description,
-        ]
-          .filter(Boolean)
-          .join(" ");
-      }
-      return "";
-    }).join("\n");
+    return experience
+      .map((entry) => {
+        if (typeof entry === "string") return entry;
+        if (typeof entry === "object" && entry !== null) {
+          return [entry.title, entry.company, entry.duration, entry.description]
+            .filter(Boolean)
+            .join(" ");
+        }
+        return "";
+      })
+      .join("\n");
   }
 
   const isJDProvided = !!(jobDescription && jobDescription.trim().length > 0);
@@ -49,92 +46,105 @@ export async function runPipeline({
   const resumeText = resumeData.resumeText || "";
 
   // 🟢 Skill Match
-  const skillMatch = isJDProvided 
-    ? safeEval("skillMatch", () =>
+  const skillMatch = isJDProvided
+    ? await safeEval("skillMatch", () =>
         skillEvaluator({
           resumeSkills: resumeData.skills || [],
           jobSkills,
-        })
+        }),
       )
-    : { score: null, name: "skillMatch", message: "No job description provided" };
-  
+    : {
+        score: null,
+        name: "skillMatch",
+        message: "No job description provided",
+      };
+
   evaluations.push(skillMatch);
 
   // 🟡 Keyword Match
   const keywordMatch = isJDProvided
-    ? safeEval("keywordMatch", () =>
+    ? await safeEval("keywordMatch", () =>
         keywordEvaluator({
           resumeText,
           jobDescription,
           resumeSkills: resumeData.skills || [],
           jobSkills,
-        })
+        }),
       )
-    : { score: null, name: "keywordMatch", message: "No job description provided" };
+    : {
+        score: null,
+        name: "keywordMatch",
+        message: "No job description provided",
+      };
 
   evaluations.push(keywordMatch);
 
   // 🔵 Experience Match
   const experienceMatch = isJDProvided
-    ? safeEval("experienceMatch", () =>
+    ? await safeEval("experienceMatch", () =>
         experienceEvaluator({
           candidateExperienceText: parseExperience(resumeData.experience),
           jobDescription,
-        })
+        }),
       )
-    : { score: null, name: "experienceMatch", message: "No job description provided" };
+    : {
+        score: null,
+        name: "experienceMatch",
+        message: "No job description provided",
+      };
 
   evaluations.push(experienceMatch);
 
   // 🟣 Consistency Match
-  const consistencyMatch = safeEval("consistencyMatch", () =>
+  const consistencyMatch = await safeEval("consistencyMatch", () =>
     consistencyEvaluator({
       resumeText,
-    })
+    }),
   );
   evaluations.push({ ...consistencyMatch, name: "consistencyMatch" });
 
   // 🟠 Readability Match
-  const readabilityMatch = safeEval("readabilityMatch", () =>
+  const readabilityMatch = await safeEval("readabilityMatch", () =>
     readabilityEvaluator({
       resumeText,
-    })
+    }),
   );
   evaluations.push({ ...readabilityMatch, name: "readabilityMatch" });
 
   // 🔥 Advanced Evaluators
-  
+
   // 💥 Impact Match
-  const impactMatch = safeEval("impactMatch", () =>
+  const impactMatch = await safeEval("impactMatch", () =>
     impactEvaluator({
       resumeText,
-    })
+    }),
   );
   evaluations.push(impactMatch);
 
   // 🏗️ ATS Optimization
-  const atsOptimization = safeEval("atsOptimization", () =>
+  const atsOptimization = await safeEval("atsOptimization", () =>
     atsOptimizationEvaluator({
       resumeData,
-    })
+    }),
   );
   evaluations.push(atsOptimization);
 
   // 🏛️ Tech Standard
-  const techStandard = safeEval("techStandard", () =>
+  const techStandard = await safeEval("techStandard", () =>
     techStandardEvaluator({
       resumeText,
-    })
+    }),
   );
   evaluations.push(techStandard);
-
 
   // 🧠 Aggregate
   const result = aggregateResults(evaluations, isJDProvided);
   if (!result) throw new Error("[runPipeline] aggregateResults returned empty");
   const { score, breakdown } = result;
 
-  const failedEvaluators = evaluations.filter(e => e.error).map(e => e.name);
+  const failedEvaluators = evaluations
+    .filter((e) => e.error)
+    .map((e) => e.name);
 
   // 🎯 Gap Analysis
   const gapAnalysis = gapAnalyzer({
@@ -145,7 +155,7 @@ export async function runPipeline({
     readabilityMatch,
     impactMatch,
     atsOptimization,
-    techStandard
+    techStandard,
   });
 
   // 🔥 Classification
@@ -154,7 +164,6 @@ export async function runPipeline({
     skillMatch,
     experienceMatch,
   });
-
 
   return {
     score,
@@ -171,6 +180,6 @@ export async function runPipeline({
     techStandard,
     gapAnalysis,
     classification,
-    isJDProvided
+    isJDProvided,
   };
 }
