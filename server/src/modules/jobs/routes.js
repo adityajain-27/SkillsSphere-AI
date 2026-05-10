@@ -11,6 +11,7 @@ import {
   getApplications,
   getMyApplications,
   getMyApplicationsDetailed,
+  withdrawJobApplication,
 } from "./controller.js";
 
 const router = express.Router();
@@ -38,6 +39,7 @@ router
 
 // Application routes
 router.post("/:id/apply", authorizeRoles("student"), applyToJobPosting);
+router.patch("/:id/withdraw", authorizeRoles("student"), withdrawJobApplication);
 router.get("/:id/applications", authorizeRoles("recruiter"), getApplications);
 
 export default router;

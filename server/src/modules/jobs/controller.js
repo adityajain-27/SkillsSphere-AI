@@ -8,6 +8,7 @@ import {
   getApplicantAnalytics as getApplicantAnalyticsData,
   getMyAppliedJobIds as getMyAppliedJobIdsService,
   getMyApplicationsWithDetails as getMyAppsDetailedService,
+  withdrawApplication as withdrawAppService,
 } from "./service.js";
 import AppError from "../../utils/AppError.js";
 import asyncHandler from "../../utils/asyncHandler.js";
@@ -231,11 +232,32 @@ export const getMyApplications = asyncHandler(async (req, res) => {
  * @access  Private (Students only)
  */
 export const getMyApplicationsDetailed = asyncHandler(async (req, res) => {
-  const applications = await getMyAppsDetailedService(req.user._id);
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
+
+  const result = await getMyAppsDetailedService(req.user._id, { page, limit });
 
   res.status(200).json({
     success: true,
-    count: applications.length,
-    applications,
+    count: result.applications.length,
+    totalCount: result.totalCount,
+    totalPages: result.totalPages,
+    currentPage: result.currentPage,
+    applications: result.applications,
+  });
+});
+
+/**
+ * @desc    Withdraw a job application
+ * @route   PATCH /api/jobs/:id/withdraw
+ * @access  Private (Students only)
+ */
+export const withdrawJobApplication = asyncHandler(async (req, res) => {
+  const application = await withdrawAppService(req.params.id, req.user._id);
+
+  res.status(200).json({
+    success: true,
+    message: "Application withdrawn successfully",
+    application,
   });
 });

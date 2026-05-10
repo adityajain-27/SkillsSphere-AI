@@ -424,15 +424,63 @@ export const getMyAppliedJobIds = async (applicantId) => {
 };
 
 /**
- * Get all applications with full job details for the current student
+ * Get all applications with full job details for the current student (paginated)
  * @param {string} applicantId - ID of the student
- * @returns {Promise<Object[]>} - Array of application objects with populated job data
+ * @param {Object} options - Pagination options
+ * @param {number} options.page - Page number (1-indexed)
+ * @param {number} options.limit - Items per page
+ * @returns {Promise<Object>} - { applications, totalCount, totalPages, currentPage }
  */
-export const getMyApplicationsWithDetails = async (applicantId) => {
-  const applications = await JobApplication.find({ applicant: applicantId })
-    .populate("job", "title skills location status salary jobLevel description")
-    .sort({ createdAt: -1 })
-    .lean();
+export const getMyApplicationsWithDetails = async (applicantId, { page = 1, limit = 10 } = {}) => {
+  const skip = (page - 1) * limit;
 
-  return applications;
+  const [applications, totalCount] = await Promise.all([
+    JobApplication.find({ applicant: applicantId })
+      .populate("job", "title skills location status salary jobLevel description")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    JobApplication.countDocuments({ applicant: applicantId }),
+  ]);
+
+  return {
+    applications,
+    totalCount,
+    totalPages: Math.ceil(totalCount / limit),
+    currentPage: page,
+  };
+};
+
+/**
+ * Withdraw a job application
+ * @param {string} jobId - ID of the job
+ * @param {string} applicantId - ID of the student
+ * @returns {Promise<Object>} - Updated application
+ */
+export const withdrawApplication = async (jobId, applicantId) => {
+  const application = await JobApplication.findOne({
+    job: jobId,
+    applicant: applicantId,
+  });
+
+  if (!application) {
+    throw new AppError("Application not found", 404);
+  }
+
+  if (application.status === "withdrawn") {
+    throw new AppError("Application is already withdrawn", 400);
+  }
+
+  if (["shortlisted", "rejected"].includes(application.status)) {
+    throw new AppError(
+      `Cannot withdraw a ${application.status} application`,
+      400
+    );
+  }
+
+  application.status = "withdrawn";
+  await application.save();
+
+  return application;
 };
