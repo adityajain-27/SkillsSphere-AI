@@ -252,6 +252,20 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
+    updateUserProfile: (state, action) => {
+      state.user = action.payload;
+      
+      // Update storage as well
+      const storage = window.localStorage.getItem("skillssphere.auth.token") 
+        ? window.localStorage 
+        : window.sessionStorage;
+      
+      try {
+        storage.setItem("skillssphere.auth.user", JSON.stringify(action.payload));
+      } catch (e) {
+        // Ignore storage errors
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -346,6 +360,7 @@ export const {
   logout,
   setPendingVerificationEmail,
   setOAuthData,
+  updateUserProfile,
 } = authSlice.actions;
 
 export default authSlice.reducer;

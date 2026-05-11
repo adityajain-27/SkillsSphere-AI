@@ -17,15 +17,11 @@ import Input from "../../shared/components/Input";
 import Button from "../../shared/components/Button";
 import ProfileField from "./components/ProfileField";
 
-// Mock user — no API calls, frontend-only
-const MOCK_USER = {
-  name: "Candidate One",
-  email: "candidate@example.com",
-  role: "student",           // "student" | "tutor" | "recruiter"
-  isEmailVerified: true,
-  createdAt: "2024-12-01T10:30:00Z",
-  updatedAt: "2025-03-15T08:45:00Z",
-};
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { updateUserProfile, logout } from "../../features/auth/authSlice";
+import { updateProfile, deleteProfile } from "./services/profileService";
+import LoadingState from "../../shared/components/LoadingState";
 
 const ROLE_LABELS = {
   student: "Student",
@@ -61,22 +57,28 @@ function getInitials(name) {
 }
 
 const ProfilePage = () => {
-  const [user, setUser] = useState(MOCK_USER);
+  const { user, token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ name: user.name });
+  const [formData, setFormData] = useState({ name: user?.name || "" });
   const [errors, setErrors] = useState({});
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   const handleEditClick = () => {
-    setFormData({ name: user.name });
+    setFormData({ name: user?.name || "" });
     setErrors({});
     setSaveSuccess(false);
     setIsEditing(true);
   };
 
   const handleCancel = () => {
-    setFormData({ name: user.name });
+    setFormData({ name: user?.name || "" });
     setErrors({});
+    setApiError("");
     setIsEditing(false);
   };
 
@@ -99,7 +101,7 @@ const ProfilePage = () => {
     return newErrors;
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
@@ -107,20 +109,46 @@ const ProfilePage = () => {
       return;
     }
 
-    // Persist locally — no API call (frontend-only)
-    setUser((prev) => ({
-      ...prev,
-      name: formData.name.trim(),
-      updatedAt: new Date().toISOString(),
-    }));
+    try {
+      setApiError("");
+      const response = await updateProfile({ name: formData.name.trim() }, token);
+      dispatch(updateUserProfile(response.user));
+      
+      setSaveSuccess(true);
+      setIsEditing(false);
+      setErrors({});
 
-    setSaveSuccess(true);
-    setIsEditing(false);
-    setErrors({});
-
-    // Clear success toast after 3 s
-    setTimeout(() => setSaveSuccess(false), 3000);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      setApiError(err.message || "Failed to update profile");
+    }
   };
+
+  const handleDeleteAccount = async () => {
+    if (
+      window.confirm(
+        "Are you absolutely sure you want to delete your account? This action cannot be undone."
+      )
+    ) {
+      setIsDeleting(true);
+      try {
+        await deleteProfile(token);
+        dispatch(logout());
+        navigate("/login");
+      } catch (err) {
+        alert(err.message || "Failed to delete account");
+        setIsDeleting(false);
+      }
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#0f172a,#020617)] flex items-center justify-center">
+        <LoadingState message="Loading profile..." />
+      </div>
+    );
+  }
 
   const verificationBadge = user.isEmailVerified ? (
     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
@@ -169,8 +197,12 @@ const ProfilePage = () => {
         <div className="mb-5 p-6 rounded-[20px] backdrop-blur-[20px] bg-slate-900/70 border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.6)]">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
             {/* Avatar */}
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-[0_0_20px_rgba(99,102,241,0.4)] flex-shrink-0 select-none">
-              {getInitials(user.name)}
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-[0_0_20px_rgba(99,102,241,0.4)] flex-shrink-0 select-none overflow-hidden">
+              {user.profilePic ? (
+                <img src={user.profilePic} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                getInitials(user.name || "")
+              )}
             </div>
 
             {/* Name + role */}
@@ -225,6 +257,13 @@ const ProfilePage = () => {
               )}
             </div>
           </div>
+
+          {apiError && (
+            <div className="mt-4 flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+              <AlertCircle size={16} className="shrink-0 mt-0.5" />
+              <p>{apiError}</p>
+            </div>
+          )}
 
           {/* Save success toast */}
           {saveSuccess && (
@@ -352,11 +391,31 @@ const ProfilePage = () => {
             value={formatDate(user.createdAt)}
             icon={<Calendar size={16} />}
           />
-          <ProfileField
-            label="Last Updated"
-            value={formatDate(user.updatedAt)}
-            icon={<Clock size={16} />}
-          />
+          {user.updatedAt && (
+            <ProfileField
+              label="Last Updated"
+              value={formatDate(user.updatedAt)}
+              icon={<Clock size={16} />}
+            />
+          )}
+        </div>
+
+        {/* Danger Zone */}
+        <div className="mb-8 p-6 rounded-[20px] backdrop-blur-[20px] bg-red-950/20 border border-red-500/20 shadow-[0_0_40px_rgba(239,68,68,0.05)]">
+          <h2 className="text-sm font-semibold text-red-400 uppercase tracking-widest mb-4">
+            Danger Zone
+          </h2>
+          <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+            Once you delete your account, there is no going back. Please be certain.
+          </p>
+          <Button
+            variant="danger"
+            onClick={handleDeleteAccount}
+            loading={isDeleting}
+            className="w-full sm:w-auto"
+          >
+            Delete Account
+          </Button>
         </div>
       </div>
     </div>

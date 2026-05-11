@@ -108,17 +108,68 @@ const Navbar = () => {
           >
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
-          {isAuthenticated && (
-            <Link 
-              to="/dashboard"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--primary)] font-bold shadow-[var(--shadow-soft)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[var(--surface-hover)]"
-              title={`Go to Dashboard - ${user?.name}`}
-            >
-              {user?.name?.charAt(0).toUpperCase() || <User size={18} />}
-            </Link>
-          )}
-          {!isAuthenticated && (
-            <Button variant="ghost" size="sm" to="/login">Login</Button>
+          {isAuthenticated ? (
+            <div className="relative">
+              <button 
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="flex items-center gap-3 hover:bg-[var(--surface-hover)] p-2 rounded-xl transition-colors duration-200"
+              >
+                <div className="w-9 h-9 rounded-full bg-[var(--surface-soft)] flex items-center justify-center text-[var(--primary)] font-bold border border-[var(--border)]">
+                  {user?.name?.charAt(0).toUpperCase() || <User size={18} />}
+                </div>
+                <div className="text-left hidden xl:block">
+                  <p className="text-sm font-medium text-[var(--text-main)]">{user?.name || 'User'}</p>
+                </div>
+                <ChevronDown size={16} className={`text-[var(--text-muted)] transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-[var(--surface)] border border-[var(--border)] shadow-[var(--shadow-soft)] rounded-xl py-2 z-[1002] animate-[slideFadeIn_0.2s_ease_forwards]">
+                  <div className="px-4 py-3 border-b border-[var(--border)] mb-2">
+                    <p className="text-sm font-medium text-[var(--text-main)] truncate">{user?.name || 'User'}</p>
+                    <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">{user?.email}</p>
+                  </div>
+                  <Link 
+                    to="/dashboard" 
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-hover)] transition-colors"
+                    onClick={() => setIsProfileOpen(false)}
+                  >
+                    <LayoutDashboard size={18} />
+                    Dashboard
+                  </Link>
+                  <Link 
+                    to="/profile" 
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-hover)] transition-colors"
+                    onClick={() => setIsProfileOpen(false)}
+                  >
+                    <User size={18} />
+                    Profile
+                  </Link>
+                  {user?.role === 'student' && (
+                    <Link 
+                      to="/my-applications" 
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--surface-hover)] transition-colors"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      <Briefcase size={18} />
+                      Applied Jobs
+                    </Link>
+                  )}
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-500 hover:text-red-400 hover:bg-red-400/10 transition-colors mt-1 border-t border-[var(--border)] pt-3"
+                  >
+                    <LogOut size={18} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" to="/login">Login</Button>
+              <Button variant="primary" size="sm" to="/register">Get Started</Button>
+            </>
           )}
         </div>
 
@@ -221,6 +272,9 @@ const Navbar = () => {
                 </div>
                 <Button variant="primary" size="lg" to="/dashboard" className="w-full justify-center">
                   Go to Dashboard
+                </Button>
+                <Button variant="outline" size="lg" to="/profile" className="w-full justify-center border-[var(--border)] text-[var(--text-main)] hover:bg-[var(--surface-hover)]">
+                  <User size={20} /> View Profile
                 </Button>
                 <Button variant="ghost" size="lg" onClick={handleLogout} className="w-full justify-center text-red-400 hover:text-red-300 hover:bg-red-400/10">
                   <LogOut size={20} /> Logout

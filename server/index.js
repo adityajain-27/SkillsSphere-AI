@@ -13,6 +13,7 @@ import jobRoutes from "./src/modules/jobs/routes.js";
 import matchingRoutes from "./src/modules/matching/routes.js";
 import dashboardRoutes from "./src/modules/dashboard/routes.js";
 import classroomRoutes from "./src/modules/classrooms/routes.js";
+import userRoutes from "./src/modules/users/routes.js";
 import { initClassroomSockets } from "./src/modules/classrooms/socket.js";
 import globalErrorHandler from "./src/middleware/errorMiddleware.js";
 import { logEvaluatorConfig } from "./src/config/evaluatorConfig.js";
@@ -74,6 +75,7 @@ app.use("/api/jobs", jobRoutes);
 app.use("/api/matching", matchingRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/classrooms", classroomRoutes);
+app.use("/api/users", userRoutes);
 
 // Initialize Sockets
 initClassroomSockets(io);
